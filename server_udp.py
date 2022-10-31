@@ -13,7 +13,7 @@ sock.bind(server_address)
 
 # Wait for a connection
 print('')
-print('Attente de connexion UDP...')
+print('Attente de messages UDP...')
 
 while True:
     bytesAddressPair = sock.recvfrom(255)
