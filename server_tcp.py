@@ -8,7 +8,7 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Bind the socket to the port
 server_address = ('0.0.0.0', 10000)
-print('Demarrage du serveru TCP sur %s avec le port %s' % server_address)
+print('Demarrage du serveur TCP sur %s avec le port %s' % server_address)
 sock.bind(server_address)
 
 # Listen for incoming connections
@@ -17,7 +17,7 @@ sock.listen(1)
 while True:
     # Wait for a connection
     print('')
-    print('Attente de connexion...')
+    print('Attente de connexion TCP...')
     connection, client_address = sock.accept()
     try:
         print('Connexion de ', client_address)
