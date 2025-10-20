@@ -5,6 +5,7 @@ import sys
 
 # Create a TCP/IP socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 # Bind the socket to the port
 server_address = ('0.0.0.0', 10000)
@@ -33,7 +34,10 @@ try:
 
             # Receive the data in small chunks and retransmit it
             while True:
-                data = connection.recv(255)
+                try:
+                    data = connection.recv(255)
+                except socket.timeout:
+                    continue
                 print('Recu : "%s"' % data.decode())
                 if data:
                     print('Renvoi les memes donnees au client')

@@ -1,27 +1,35 @@
-# Source : https://pymotw.com/2/socket/tcp.html
+# Source : https://pymotw.com/2/socket/udp.html
 
 import socket
-import sys
 
-# Create a TCP/IP socket
+# Crée un socket UDP
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-# Bind the socket to the port
 server_address = ('0.0.0.0', 10000)
-print('Demarrage du serveur UDP sur %s avec le port %s' % server_address)
 sock.bind(server_address)
+sock.settimeout(1.0)  # permet d'interrompre avec Ctrl+C
 
-# Wait for a connection
-print('')
-print('Attente de messages UDP...')
+print(f"Serveur UDP démarré sur {server_address[0]}:{server_address[1]}")
+print("Attente de messages UDP...")
 
-while True:
-    bytesAddressPair = sock.recvfrom(255)
-    message = bytesAddressPair[0]
-    address = bytesAddressPair[1]
-    print('Adresse "%s"' % bytesAddressPair[0].decode())
-    print('Message "%s"' % str(bytesAddressPair[1]))
+try:
+    while True:
+        try:
+            data, address = sock.recvfrom(4096)
+        except socket.timeout:
+            continue  # revient dans la boucle, permet à Ctrl+C de fonctionner
 
-    # Sending a reply to client
-    print('Renvoi les memes donnees au client')
-    sock.sendto(bytesAddressPair[0], bytesAddressPair[1])
+        print(f"Reçu {len(data)} octets de {address}")
+        print(f"Contenu : {data.decode(errors='ignore')}")
+
+        if data:
+            sent = sock.sendto(data, address)
+            print(f"Renvoi de {sent} octets au client {address}")
+
+except KeyboardInterrupt:
+    print("\nArrêt du serveur via Ctrl+C.")
+
+finally:
+    sock.close()
+    print("Socket fermé.")
