@@ -3,30 +3,66 @@
 import socket
 import sys
 
-# Create a TCP/IP socket
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-# Connect the socket to the port where the server is listening
 server_address = ('localhost', 10000)
-print('Connexion TCP a %s sur le port %s' % server_address)
-sock.connect(server_address)
+message = 'Ceci est un message. Il va être répété par le serveur.'
+
+# Création du socket TCP
+try:
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(5.0)  # timeout global pour éviter le blocage
+except socket.error as e:
+    print(f"Erreur lors de la création du socket : {e}")
+    sys.exit(1)
+
+print('Connexion TCP à %s sur le port %s' % server_address)
+
+# Tentative de connexion
+try:
+    sock.connect(server_address)
+except socket.timeout:
+    print("Délai de connexion dépassé (timeout).")
+    sys.exit(1)
+except ConnectionRefusedError:
+    print("Connexion refusée : le serveur n’est probablement pas lancé.")
+    sys.exit(1)
+except socket.gaierror as e:
+    print(f"Erreur d’adresse serveur : {e}")
+    sys.exit(1)
+except socket.error as e:
+    print(f"Erreur de connexion : {e}")
+    sys.exit(1)
 
 try:
-    
-    # Send data
-    message = 'Ceci est un messsage. Il va etre repete par le serveur.'
+    # Envoi du message
     print('Envoi de : "%s"' % message)
-    sock.sendall(message.encode())
-    
-    # Look for the response
+    try:
+        sock.sendall(message.encode())
+    except socket.error as e:
+        print(f"Erreur lors de l’envoi : {e}")
+        sys.exit(1)
+
+    # Réception de la réponse
     amount_received = 0
     amount_expected = len(message)
-    
+
     while amount_received < amount_expected:
-        data = sock.recv(255)
-        amount_received += len(data)
-        print('Recu :  "%s"' % data.decode())
+        try:
+            data = sock.recv(255)
+            if not data:
+                print("Connexion fermée par le serveur.")
+                break
+            amount_received += len(data)
+            print('Reçu : "%s"' % data.decode(errors='ignore'))
+        except socket.timeout:
+            print("Aucune donnée reçue (timeout).")
+            break
+        except socket.error as e:
+            print(f"Erreur de réception : {e}")
+            break
+
+except KeyboardInterrupt:
+    print("\nInterruption par l’utilisateur (Ctrl+C).")
 
 finally:
-    print('Fermeture du socket TCP')
+    print("Fermeture du socket TCP.")
     sock.close()
